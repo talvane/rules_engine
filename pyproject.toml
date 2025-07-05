@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "poc-jsonlogic"
+version = "0.1.0"
+description = "POC de utilizacao da lib JsonLogic para orquestracao de regras"
+authors = ["Talvane Augusto <talvane.magalhaes@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
