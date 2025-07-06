@@ -4,9 +4,9 @@ from functools import reduce
 
 def jsonLogic(tests, data=None, functions=None):
     """
-    Executa a lógica definida em uma estrutura de testes (JSON/dict) 
+    Executa a lógica definida em uma estrutura de testes (JSON/dict)
     sobre um conjunto de dados, com suporte a chamadas de funções .
-    
+
     Exemplo de uso:
     ```python
     # 1. Defina suas funções em Python
@@ -66,9 +66,9 @@ def jsonLogic(tests, data=None, functions=None):
 
     # --- Saída Esperada ---
     # Nome formatado: SILVA, João
-    # A área é maior que 40? True    
+    # A área é maior que 40? True
     """
-    
+
     if not isinstance(tests, dict):
         return tests
 
@@ -80,30 +80,27 @@ def jsonLogic(tests, data=None, functions=None):
         op = next(iter(tests))
         values = tests[op]
     except StopIteration:
-        return None 
-    
-    
+        return None
+
     def _less_than(*v):
         """
         Verifica se todos os valores em v estão em ordem crescente.
         Retorna False se os tipos não forem comparáveis.
         """
         try:
-            return len(v) >= 2 and all(v[i] < v[i+1] for i in range(len(v)-1))
+            return len(v) >= 2 and all(v[i] < v[i + 1] for i in range(len(v) - 1))
         except TypeError:
             return False
 
-    
     def _less_than_or_equal(*v):
         """
         Verifica se todos os valores em v estão em ordem crescente ou igual.
         Retorna False se os tipos não forem comparáveis.
         """
         try:
-            return len(v) >= 2 and all(v[i] <= v[i+1] for i in range(len(v)-1))
+            return len(v) >= 2 and all(v[i] <= v[i + 1] for i in range(len(v) - 1))
         except TypeError:
             return False
-
 
     def _apply_function(*args):
         """
@@ -111,54 +108,63 @@ def jsonLogic(tests, data=None, functions=None):
         O primeiro argumento é o nome da função, e o restante são seus parâmetros.
         """
         if not args:
-            raise ValueError("A operação 'apply' requer pelo menos um argumento (o nome da função).")
-        
+            raise ValueError(
+                "A operação 'apply' requer pelo menos um argumento (o nome da função)."
+            )
+
         func_name = args[0]
         if func_name not in functions:
-            raise NameError(f"Função pura não registrada ou não permitida: '{func_name}'")
-        
+            raise NameError(
+                f"Função pura não registrada ou não permitida: '{func_name}'"
+            )
+
         # Obtém a função do registro e a chama com os argumentos restantes
         func = functions[func_name]
         return func(*args[1:])
 
     # Define as operações suportadas
     operations = {
-        "==":   lambda a, b: a == b,
-        "===":  lambda a, b: a is b,
-        "!=":   lambda a, b: a != b,
-        "!==":  lambda a, b: a is not b,
-        ">":    lambda a, b: a > b,
-        ">=":   lambda a, b: a >= b,
-        "<":    _less_than,
-        "<=":   _less_than_or_equal,
-        "!":    lambda a: not a,
-        "%":    lambda a, b: a % b,
-        "and":  lambda *args: all(args),
-        "or":   lambda *args: any(args),
-        "?:":   lambda a, b, c: b if a else c,
-        "log":  lambda a: print(a, file=sys.stdout) or a,
-        "in":   lambda a, b: (a in b) if isinstance(b, (list, tuple, dict, str)) else False,
-        "var":  lambda a, not_found=None:
-        reduce(
+        "==": lambda a, b: a == b,
+        "===": lambda a, b: a is b,
+        "!=": lambda a, b: a != b,
+        "!==": lambda a, b: a is not b,
+        ">": lambda a, b: a > b,
+        ">=": lambda a, b: a >= b,
+        "<": _less_than,
+        "<=": _less_than_or_equal,
+        "!": lambda a: not a,
+        "%": lambda a, b: a % b,
+        "and": lambda *args: all(args),
+        "or": lambda *args: any(args),
+        "?:": lambda a, b, c: b if a else c,
+        "log": lambda a: print(a, file=sys.stdout) or a,
+        "in": lambda a, b: (a in b)
+        if isinstance(b, (list, tuple, dict, str))
+        else False,
+        "var": lambda a, not_found=None: reduce(
             lambda d, key: (
-            d.get(str(key), not_found) if isinstance(d, dict)
-            else d[int(key)] if isinstance(d, (list, tuple)) and str(key).lstrip("-").isdigit() and int(key) < len(d)
-            else not_found
+                d.get(str(key), not_found)
+                if isinstance(d, dict)
+                else d[int(key)]
+                if isinstance(d, (list, tuple))
+                and str(key).lstrip("-").isdigit()
+                and int(key) < len(d)
+                else not_found
             ),
             str(a).split("."),
-            data
+            data,
         ),
-        "cat":  lambda *args: "".join(map(str, args)),
-        "+":    lambda *args: sum(map(float, args)),
-        "*":    lambda *args: reduce(lambda total, arg: total * float(arg), args, 1.0),
-        "-":    lambda a, b=None: -a if b is None else a - b,
-        "/":    lambda a, b=None: a if b is None else float(a) / float(b),
-        "min":  lambda *args: min(args),
-        "max":  lambda *args: max(args),
+        "cat": lambda *args: "".join(map(str, args)),
+        "+": lambda *args: sum(map(float, args)),
+        "*": lambda *args: reduce(lambda total, arg: total * float(arg), args, 1.0),
+        "-": lambda a, b=None: -a if b is None else a - b,
+        "/": lambda a, b=None: a if b is None else float(a) / float(b),
+        "min": lambda *args: min(args),
+        "max": lambda *args: max(args),
         "count": lambda *args: sum(1 for a in args if a),
         "apply": _apply_function,
     }
-    
+
     # "if" é um alias comum para o operador ternário "?:"
     operations["if"] = operations["?:"]
 
@@ -167,8 +173,8 @@ def jsonLogic(tests, data=None, functions=None):
 
     if not isinstance(values, (list, tuple)):
         values = [values]
-    
+
     # Passa o registro 'functions' para as chamadas recursivas
-    processed_values = map(lambda val: jsonLogic(val, data, functions), values)    
+    processed_values = map(lambda val: jsonLogic(val, data, functions), values)
 
     return operations[op](*processed_values)

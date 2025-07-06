@@ -1,8 +1,7 @@
-# file: motor_regras.py
+from src.lib.json_logic import jsonLogic
+from src.regras import REGRAS_VALIDACAO, REGRA_PROCESSAMENTO
+from src.acoes import ACOES_DISPONIVEIS, logar_erro_validacao
 
-from lib.json_logic import jsonLogic
-from regras import REGRAS_VALIDACAO, REGRA_PROCESSAMENTO
-from acoes import ACOES_DISPONIVEIS, logar_erro_validacao
 
 class MotorDeRegrasCustom:
     def __init__(self):
@@ -39,8 +38,10 @@ class MotorDeRegrasCustom:
 
     def executar(self, dados_solicitacao):
         """Orquestra todo o processo de decisão."""
-        print(f"\n>>>> INICIANDO EXECUÇÃO PARA SOLICITAÇÃO ID: {dados_solicitacao['id']} <<<<")
-        
+        print(
+            f"\n>>>> INICIANDO EXECUÇÃO PARA SOLICITAÇÃO ID: {dados_solicitacao['id']} <<<<"
+        )
+
         # 1. Avaliar (Validação)
         erro_validacao = self._validar_dados(dados_solicitacao)
 
@@ -55,6 +56,8 @@ class MotorDeRegrasCustom:
 
         # 3. Agir (sobre o processamento)
         self._executar_acao(decisao_final, dados_solicitacao)
-        
-        print(f"\n>>>> EXECUÇÃO CONCLUÍDA PARA SOLICITAÇÃO ID: {dados_solicitacao['id']} <<<<")
+
+        print(
+            f"\n>>>> EXECUÇÃO CONCLUÍDA PARA SOLICITAÇÃO ID: {dados_solicitacao['id']} <<<<"
+        )
         return dados_solicitacao
