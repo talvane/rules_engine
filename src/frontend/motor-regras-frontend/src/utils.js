@@ -54,3 +54,62 @@ export const graphToJsonLogic = (nodes, edges) => {
   
   return buildJsonFromNode(rootNode, nodes, edges);
 };
+
+function formatCondition(condition) {
+  if (!condition || typeof condition !== 'object') return 'condição inválida';
+  
+  const operator = Object.keys(condition)[0];
+  if (!operator) return 'condição vazia';
+
+  const args = condition[operator];
+  if (!Array.isArray(args) || args.length < 2) return 'argumentos inválidos';
+
+  const field = args[0]?.var;
+  const value = typeof args[1] === 'string' ? `"${args[1]}"` : args[1];
+
+  return `<strong>${field || ''} ${operator} ${value !== undefined ? value : ''}</strong>`;
+}
+
+// Função principal que gera a lista de passos a partir do JSON
+export const generateExplanationSteps = (rule) => {
+  const steps = [];
+  let stepCounter = 1;
+
+  function recurse(currentRule, level = 0, path = '') {
+    // Caso base: Se a regra for um resultado final (uma string)
+    if (typeof currentRule === 'string') {
+      steps.push({ 
+        text: `${path} o resultado final é <strong>"${currentRule}"</strong> e o processo termina.`,
+        level 
+      });
+      return;
+    }
+
+    // Caso recursivo: Se for um bloco "if"
+    if (currentRule && currentRule.if) {
+      const [condition, thenBranch, elseBranch] = currentRule.if;
+      
+      if (!condition) return; // Não processa "if" sem condição
+
+      const conditionText = formatCondition(condition);
+      steps.push({ 
+        text: `${stepCounter}. Avalia-se a condição: ${conditionText}?`, 
+        level
+      });
+      stepCounter++;
+
+      // Processa o caminho "ENTÃO"
+      if (thenBranch) {
+        recurse(thenBranch, level + 1, '↳ Se <strong>SIM</strong>,');
+      }
+      
+      // Processa o caminho "SENÃO"
+      if (elseBranch) {
+        recurse(elseBranch, level + 1, '↳ Se <strong>NÃO</strong>,');
+      }
+    }
+  }
+
+  recurse(rule);
+  return steps;
+};

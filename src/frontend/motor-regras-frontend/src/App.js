@@ -18,6 +18,7 @@ import ResultNode from './nodes/ResultNode';
 import JsonOutput from './JsonOutput';
 import TrashCan from './TrashCan';
 import { graphToJsonLogic } from './utils';
+import Explanation from './Explanation';
 import './App.css';
 
 let id = 0;
@@ -138,6 +139,7 @@ const App = () => {
           <div className="json-output-container">
             <button onClick={handleGenerateJson} className="generate-button">Gerar JSON da Regra</button>
             <JsonOutput generatedJson={generatedJson} />
+            <Explanation generatedJson={generatedJson} />
           </div>
         </ReactFlowProvider>
       </div>

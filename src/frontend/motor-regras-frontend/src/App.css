@@ -138,3 +138,35 @@ body {
   background-color: rgba(220, 53, 69, 1);
   transform: translateX(-50%) scale(1.1);
 }
+
+.explanation-card {
+  margin-top: 2rem;
+  border-top: 2px solid #555;
+  padding-top: 1rem;
+  font-size: 0.95em;
+}
+
+.explanation-card h3 {
+  color: #eee;
+  margin-top: 0;
+}
+
+.explanation-card ol {
+  list-style: none;
+  padding-left: 0;
+  color: #dcdcdc;
+}
+
+.explanation-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid #444;
+}
+
+.explanation-card li:last-child {
+  border-bottom: none;
+}
+
+.explanation-card strong {
+  color: #9efeff; /* Cor de destaque ciano, igual ao JSON */
+  font-weight: 600;
+}
