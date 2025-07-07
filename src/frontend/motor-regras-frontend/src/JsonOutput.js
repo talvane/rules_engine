@@ -1,24 +1,11 @@
 import React from 'react';
 
-const JsonOutput = ({ validationRules, processingRule }) => {
+const JsonOutput = ({ generatedJson }) => {
+  // Simplificado para mostrar apenas a regra de processamento principal
   return (
-    <div className="output-card">
-      <h2>JSON Gerado</h2>
-      <p>Copie e cole este código no seu arquivo <strong>regras.py</strong>.</p>
-      
-      <div className="json-section">
-        <h3>REGRAS_VALIDACAO</h3>
-        <pre><code>
-          {JSON.stringify(validationRules, null, 2)}
-        </code></pre>
-      </div>
-
-      <div className="json-section">
-        <h3>REGRA_PROCESSAMENTO</h3>
-        <pre><code>
-          {JSON.stringify(processingRule, null, 2)}
-        </code></pre>
-      </div>
+    <div className="json-output-card">
+      <h3>JSON Final Gerado</h3>
+      <pre><code>{JSON.stringify(generatedJson, null, 2)}</code></pre>
     </div>
   );
 };

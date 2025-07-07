@@ -1,162 +1,148 @@
-import React, { useState } from 'react';
-import { DndContext } from '@dnd-kit/core';
-import Toolbox from './Toolbox';
-import RuleNode from './RuleNode';
-import JsonOutput from './JsonOutput';
+import React, { useState, useCallback, useRef } from 'react';
+import ReactFlow, {
+  ReactFlowProvider,
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  Controls,
+  Background,
+  MiniMap,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+
+import Sidebar from './Sidebar';
 import ErrorBoundary from './ErrorBoundary';
-import {
-  generateId,
-  findNodeAndReplace,
-  findNodeAndUpdateProperty,
-  generateJsonLogic,
-  findNodeById
-} from './utils';
+import IfNode from './nodes/IfNode';
+import ComparisonNode from './nodes/ComparisonNode';
+import ResultNode from './nodes/ResultNode';
+import JsonOutput from './JsonOutput';
+import TrashCan from './TrashCan';
+import { graphToJsonLogic } from './utils';
 import './App.css';
 
-// Função auxiliar para criar uma nova regra 'IF' vazia
-const createNewRule = () => ({
-  id: generateId(),
-  type: 'if',
-  condition: null,
-  then: null,
-  else: null,
-});
+let id = 0;
+const getId = () => `node_${id++}`;
 
-function App() {
-  const [processingRule, setProcessingRule] = useState(createNewRule());
-  const [validationRules, setValidationRules] = useState([]);
-  const [customFields, setCustomFields] = useState([]);
-  const [customValues, setCustomValues] = useState([]);
+const nodeTypes = {
+  if: IfNode,
+  comparison: ComparisonNode,
+  result: ResultNode,
+};
 
-  const handleAddField = (fieldName) => {
-    if (fieldName && !customFields.some(f => f.value === fieldName)) {
-      const newField = { id: `custom-field-${fieldName}`, type: 'field', value: fieldName };
-      setCustomFields(prev => [...prev, newField]);
+const App = () => {
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [generatedJson, setGeneratedJson] = useState({});
+  const [availableFields, setAvailableFields] = useState([
+    { value: 'pontuacao_credito', label: 'Pontuação Crédito' },
+    { value: 'renda_mensal', label: 'Renda Mensal' },
+    { value: 'possui_divida_ativa', label: 'Possui Dívida Ativa' },
+  ]);
+
+  const trashCanRef = useRef(null);
+  const [isDraggingOverTrash, setIsDraggingOverTrash] = useState(false);
+
+  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+
+  const deleteNode = useCallback((idToDelete) => {
+    // Remove o nó com o ID fornecido
+    setNodes((nds) => nds.filter((node) => node.id !== idToDelete));
+    // Remove todas as arestas conectadas a esse nó
+    setEdges((eds) => eds.filter((edge) => edge.source !== idToDelete && edge.target !== idToDelete));
+  }, [setNodes, setEdges]);
+
+  // Evento que dispara continuamente enquanto um nó é arrastado
+  const onNodeDrag = (event, node) => {
+    if (!trashCanRef.current) return;
+    const trashCanBounds = trashCanRef.current.getBoundingClientRect();
+    const { clientX, clientY } = event;
+
+    // Verifica se o mouse está sobre a lixeira e atualiza o estado
+    const isOver = clientX >= trashCanBounds.left &&
+                   clientX <= trashCanBounds.right &&
+                   clientY >= trashCanBounds.top &&
+                   clientY <= trashCanBounds.bottom;
+    setIsDraggingOverTrash(isOver);
+  };
+
+  // Evento que dispara quando o usuário solta o nó
+  const onNodeDragStop = (event, node) => {
+    // Se o nó foi solto sobre a lixeira, delete-o
+    if (isDraggingOverTrash) {
+      deleteNode(node.id);
+    }
+    // Reseta o estado visual da lixeira
+    setIsDraggingOverTrash(false);
+  };
+
+  const handleAddNewField = (newFieldName) => {
+    if (newFieldName && !availableFields.some(f => f.value === newFieldName)) {
+      setAvailableFields(prev => [...prev, { value: newFieldName, label: newFieldName }]);
     }
   };
 
-  const handleAddValue = (valueString) => {
-    if (valueString.trim() === '') return;
-    let parsedValue;
-    if (!isNaN(parseFloat(valueString)) && isFinite(valueString)) parsedValue = parseFloat(valueString);
-    else if (valueString.toLowerCase() === 'true') parsedValue = true;
-    else if (valueString.toLowerCase() === 'false') parsedValue = false;
-    else if (valueString.toLowerCase() === 'null') parsedValue = null;
-    else parsedValue = valueString;
-
-    if (!customValues.some(v => v.value === parsedValue)) {
-      const newValue = { id: `custom-value-${String(parsedValue)}`, type: 'static_value', value: parsedValue };
-      setCustomValues(prev => [...prev, newValue]);
-    }
+  const updateNodeData = (nodeId, newData) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          // Substitui o objeto data para garantir consistência
+          return { ...node, data: newData };
+        }
+        return node;
+      })
+    );
   };
 
-  const addValidationRule = () => {
-    setValidationRules(current => [...current, createNewRule()]);
+  const addNode = (type, value = '') => {
+    const newNode = {
+      id: getId(),
+      type,
+      position: { x: 150 + Math.random() * 300, y: 50 + Math.random() * 150 },
+      data: {
+        value: value,
+        onUpdate: updateNodeData,
+        availableFields: availableFields, // Passa a lista de campos para o nó
+      },
+    };
+    setNodes((nds) => nds.concat(newNode));
   };
 
-  const removeValidationRule = (indexToRemove) => {
-    setValidationRules(current => current.filter((_, index) => index !== indexToRemove));
+  const handleGenerateJson = () => {
+    const jsonResult = graphToJsonLogic(nodes, edges);
+    setGeneratedJson(jsonResult);
   };
-
-  function handleDragEnd(event) {
-    const { active, over } = event;
-    if (!over || !over.id) return;
-
-    const draggedItem = active.data.current;
-    const [_, ruleTypeOrId, targetNodeId, slotName] = over.id.split('-');
-    
-    // --- LÓGICA DE ATUALIZAÇÃO PARA A REGRA DE PROCESSAMENTO ---
-    if (ruleTypeOrId === 'processing') {
-      const targetNode = findNodeById(processingRule, targetNodeId);
-      if (!targetNode) return;
-      // Reutiliza a lógica de atualização passando o setProcessingRule
-      updateRule(draggedItem, targetNode, targetNodeId, slotName, setProcessingRule);
-    }
-    
-    // --- LÓGICA DE ATUALIZAÇÃO PARA AS REGRAS DE VALIDAÇÃO ---
-    if (ruleTypeOrId.startsWith('validation')) {
-      const validationIndex = parseInt(ruleTypeOrId.split('_')[1], 10);
-      if (isNaN(validationIndex)) return;
-
-      const ruleToUpdate = validationRules[validationIndex];
-      const targetNode = findNodeById(ruleToUpdate, targetNodeId);
-      if (!targetNode) return;
-
-      // Cria uma função de atualização específica para este item da lista
-      const updateSpecificValidationRule = (updateFn) => {
-        const newValidationRules = [...validationRules];
-        newValidationRules[validationIndex] = updateFn(ruleToUpdate);
-        setValidationRules(newValidationRules);
-      };
-
-      updateRule(draggedItem, targetNode, targetNodeId, slotName, updateSpecificValidationRule);
-    }
-  }
-
-  // Função genérica que contém a lógica de como uma regra deve ser atualizada
-  function updateRule(draggedItem, targetNode, targetNodeId, slotName, stateUpdater) {
-    const draggedType = draggedItem.type;
-    const draggedValue = draggedItem.value;
-    const targetType = targetNode.type;
-
-    if (['if', 'and', 'comparison'].includes(draggedType)) {
-      let newNode;
-      if (draggedType === 'if') newNode = { id: generateId(), type: 'if', condition: null, then: null, else: null };
-      if (draggedType === 'and') newNode = { id: generateId(), type: 'and', conditions: [null, null] };
-      if (draggedType === 'comparison') newNode = { id: generateId(), type: 'comparison', field: null, operator: null, value: null };
-      stateUpdater(current => findNodeAndReplace(current, targetNodeId, slotName, newNode));
-    } else if (draggedType === 'static_value' && targetType === 'if' && (slotName === 'then' || slotName === 'else')) {
-      const newNode = { id: generateId(), type: 'static_value', value: draggedValue };
-      stateUpdater(current => findNodeAndReplace(current, targetNodeId, slotName, newNode));
-    } else if (targetType === 'comparison') {
-      const isValidPropertyDrop = (draggedType === 'field' && slotName === 'field') || (draggedType === 'operator' && slotName === 'operator') || (draggedType === 'static_value' && slotName === 'value');
-      if (isValidPropertyDrop) {
-        stateUpdater(current => findNodeAndUpdateProperty(current, targetNodeId, slotName, draggedValue));
-      }
-    } else if (draggedType === 'field' && targetType !== 'comparison') {
-      const newComparisonNode = { id: generateId(), type: 'comparison', field: draggedValue, operator: null, value: null };
-      stateUpdater(current => findNodeAndReplace(current, targetNodeId, slotName, newComparisonNode));
-    }
-  }
-
-  const finalProcessingJson = generateJsonLogic(processingRule);
-  const finalValidationJson = validationRules.map(generateJsonLogic);
 
   return (
     <ErrorBoundary>
-      <DndContext onDragEnd={handleDragEnd}>
-        <div className="App">
-          <header className="App-header">
-            <h1>Construtor de Regras Completo</h1>
-          </header>
-          <main className="dnd-container">
-            <Toolbox customFields={customFields} customValues={customValues} onAddField={handleAddField} onAddValue={handleAddValue} />
-            <div className="canvas-and-output">
-              <div className="canvas">
-                <div className="canvas-header">
-                  <h2>Regras de Validação</h2>
-                  <button onClick={addValidationRule}>+ Adicionar Regra de Validação</button>
-                </div>
-                {validationRules.map((rule, index) => (
-                  <div key={rule.id} className="rule-container">
-                    <RuleNode node={rule} ruleId={`validation_${index}`} />
-                    <button onClick={() => removeValidationRule(index)} className="remove-btn">Remover</button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="canvas">
-                <h2>Regra de Processamento</h2>
-                <RuleNode node={processingRule} ruleId="processing" />
-              </div>
-
-              <JsonOutput processingRule={finalProcessingJson} validationRules={finalValidationJson} />
-            </div>
-          </main>
-        </div>
-      </DndContext>
+      <div className="app-container">
+        <ReactFlowProvider>
+          <Sidebar addNode={addNode} onAddNewField={handleAddNewField} />
+          <div className="reactflow-wrapper">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              onNodeDrag={onNodeDrag}
+              onNodeDragStop={onNodeDragStop}
+              fitView
+            >
+              <Background />
+              <Controls />
+              <MiniMap />
+            </ReactFlow>
+            <TrashCan ref={trashCanRef} isOver={isDraggingOverTrash} />
+          </div>
+          <div className="json-output-container">
+            <button onClick={handleGenerateJson} className="generate-button">Gerar JSON da Regra</button>
+            <JsonOutput generatedJson={generatedJson} />
+          </div>
+        </ReactFlowProvider>
+      </div>
     </ErrorBoundary>
   );
-}
+};
 
 export default App;

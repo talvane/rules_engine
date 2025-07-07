@@ -1,147 +1,140 @@
 /* src/App.css */
 body {
-  background-color: #f0f2f5;
+  margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  color: #333;
-  margin: 0;
-}
-.App { display: flex; flex-direction: column; height: 100vh; }
-.App-header { background-color: #282c34; padding: 20px; color: white; text-align: center; }
-.dnd-container { display: flex; flex-grow: 1; }
-
-/* Toolbox */
-.toolbox {
-  width: 280px;
-  background-color: #ffffff;
-  padding: 1rem;
-  border-right: 1px solid #dee2e6;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-  overflow-y: auto;
-}
-.toolbox h3, .toolbox h4 {
-  text-align: center; color: #282c34; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; margin: 0 0 1rem 0;
-}
-.toolbox h4 { margin-top: 1.5rem; font-size: 1rem; color: #495057; }
-.toolbox-item {
-  padding: 10px 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;
-  margin-bottom: 10px; cursor: grab; text-align: center; font-weight: 500; transition: box-shadow 0.2s;
-}
-.toolbox-item:active { cursor: grabbing; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1000; }
-
-/* Canvas and Output */
-.canvas-and-output { flex-grow: 1; display: flex; flex-direction: column; padding: 2rem; gap: 2rem; overflow-y: auto; }
-.canvas { background-color: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-.canvas h2 { margin-top: 0; }
-
-/* Rule Nodes */
-.node {
-  padding: 0.5rem;
-  margin: 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-.if-node { background-color: #e7f5ff; border-color: #b3d7ff; }
-.if-node > div { margin-left: 20px; padding: 10px; border-left: 3px solid #b3d7ff; }
-.and-node { background-color: #fffbe6; border-color: #ffe58f; display: flex; align-items: center; gap: 0.5rem; justify-content: center; }
-.comparison-node { background-color: #f6f8fa; border-color: #e1e4e8; display: flex; align-items: center; gap: 0.5rem; }
-.static-value-node { background-color: #e6f7ff; border-color: #91d5ff; font-weight: bold; text-align: center; }
-.node strong { margin-right: 0.5rem; }
-
-/* Output Area */
-.output-card { background-color: #ffffff; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: left; }
-.json-section pre {
-  background-color: #282c34; color: #9efeff; padding: 1rem; border-radius: 4px;
-  white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace;
+  background-color: #f0f2f5;
 }
 
-/* Adicione estas classes ao final do seu src/App.css */
-
-.toolbox hr {
-  border: none;
-  border-top: 1px solid #eee;
-  margin: 1.5rem 0;
-}
-
-.add-item-form {
+.app-container {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  height: 100vh;
+  width: 100vw;
 }
 
-.add-item-form input {
+.sidebar {
+  width: 280px;
+  padding: 1.5rem;
+  border-right: 1px solid #ddd;
+  background: #fff;
+  z-index: 10;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+}
+.sidebar h3, .sidebar h4 {
+  margin-top: 0;
+  color: #333;
+}
+.sidebar h4 {
+  margin-top: 1.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+.sidebar p {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+.sidebar button {
+  display: block; width: 100%; padding: 10px; margin-bottom: 10px;
+  background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;
+  font-size: 0.9em; font-weight: 500;
+}
+.sidebar button:hover { background: #0056b3; }
+
+.sidebar-form { display: flex; margin-bottom: 1rem; }
+.sidebar-form input {
+  flex-grow: 1; border: 1px solid #ccc; padding: 8px; border-radius: 4px 0 0 4px;
+}
+.sidebar-form button {
+  padding: 8px 12px; border-radius: 0 4px 4px 0; margin: 0; background-color: #28a745;
+}
+
+.reactflow-wrapper {
   flex-grow: 1;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  height: 100%;
 }
 
-.add-item-form button {
-  padding: 8px 12px;
-  background-color: #28a745;
+.json-output-container {
+  width: 400px;
+  padding: 1.5rem;
+  background: #282c34;
   color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.add-item-form button:hover {
-  background-color: #218838;
-}
-
-.toolbox-section {
-  max-height: 150px;
   overflow-y: auto;
-  padding-right: 10px; /* Para a barra de rolagem não sobrepor o conteúdo */
+  display: flex;
+  flex-direction: column;
+}
+.generate-button {
+  width: 100%; background: #28a745 !important; margin-bottom: 1rem;
+}
+.json-output-card {
+  flex-grow: 1;
+}
+.json-output-card h3 {
+  border-bottom: 1px solid #555;
+  padding-bottom: 0.5rem;
+}
+.json-output-card pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 0.9em;
+  background-color: #1e1e1e;
+  padding: 1rem;
+  border-radius: 4px;
 }
 
-.operator-node {
-  background-color: #fff0f6 !important;
-  border-color: #ffadd2 !important;
-  color: #c41d7f !important;
-}
-
-.error-boundary {
-  background-color: #fffbe6;
-  border: 1px solid #ffe58f;
-  color: #d46b08;
-  padding: 2rem;
-  margin: 2rem;
+/* Estilos dos Nós Customizados */
+.react-flow-node {
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  border: 2px solid #222;
+  padding: 10px;
+  background: white;
+  min-width: 180px;
+  font-size: 14px;
   text-align: center;
 }
+.node-header {
+  font-weight: bold;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 10px;
+}
+.node-content { padding: 5px; }
 
-/* Adicione ao final do seu src/App.css */
+.if-node { background: #e7f5ff; border-color: #90c5ff; }
+.comparison-node { background: #fffbe6; border-color: #ffe58f; }
+.comparison-node .node-content { display: flex; flex-direction: column; gap: 8px; }
+.comparison-node select, .comparison-node input {
+  width: 100%; box-sizing: border-box; padding: 8px; border-radius: 4px; border: 1px solid #ccc;
+}
+.result-node { background: #f6ffed; border-color: #b7eb8f; }
+.handle-label {
+  position: absolute; bottom: -20px; font-size: 11px; font-weight: bold; color: #555;
+}
+.then-label { left: 25%; transform: translateX(-50%); }
+.else-label { left: 75%; transform: translateX(-50%); }
 
-.canvas-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+.error-boundary {
+  background-color: #fffbe6; border: 1px solid #ffe58f; color: #d46b08;
+  padding: 2rem; margin: 2rem; border-radius: 8px; text-align: center;
 }
 
-.canvas-header button {
-  padding: 8px 16px;
-  background-color: #17a2b8;
-}
-
-.canvas-header button:hover {
-  background-color: #138496;
-}
-
-.rule-container {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  position: relative;
-}
-
-.rule-container .remove-btn {
+.trash-can {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: #dc3545;
-  padding: 4px 8px;
-  font-size: 0.8rem;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 20px 30px;
+  background-color: rgba(220, 53, 69, 0.7);
+  color: white;
+  border-radius: 10px;
+  font-size: 3rem;
+  z-index: 20;
+  border: 2px dashed white;
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.trash-can.active {
+  background-color: rgba(220, 53, 69, 1);
+  transform: translateX(-50%) scale(1.1);
 }
