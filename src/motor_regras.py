@@ -1,6 +1,6 @@
-from src.lib.json_logic import jsonLogic
-from src.regras import REGRAS_VALIDACAO, REGRA_PROCESSAMENTO
-from src.acoes import ACOES_DISPONIVEIS, logar_erro_validacao
+from lib.json_logic import jsonLogic
+from regras import REGRAS_VALIDACAO, REGRA_PROCESSAMENTO
+from acoes import ACOES_DISPONIVEIS, logar_erro_validacao
 
 
 class MotorDeRegrasCustom:

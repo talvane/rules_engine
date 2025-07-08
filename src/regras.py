@@ -10,15 +10,20 @@ REGRAS_VALIDACAO = [
 # Regra de processamento
 REGRA_PROCESSAMENTO = {
     "if": [
-        {"<": [{"var": "Idade"}, 18]},
+        {"<": [{"var": "idade"}, 18]},
         "RECUSADO",
         {
             "if": [
-                {"<": [{"var": "pontuacao_credito"}, 750]},
+                {"var": "possui_divida_ativa"},
                 "ANALISE_MANUAL",
                 {
                     "if": [
-                        {"!=": [{"var": "possui_divida_ativa"}, False]},
+                        {
+                            "and": [
+                                {"<": [{"var": "pontuacao_credito"}, 500]},
+                                {"<": [{"var": "renda_mensal"}, 1000]},
+                            ]
+                        },
                         "ANALISE_MANUAL",
                         "APROVADO",
                     ]

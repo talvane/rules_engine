@@ -10,6 +10,7 @@ if __name__ == "__main__":
         "renda_mensal": 7000,
         "valor_solicitado": 10000,
         "possui_divida_ativa": False,
+        "idade": 17,
     }
     resultado_1 = motor.executar(solicitacao_1)
     print("\nResultado final do objeto:", resultado_1)
@@ -22,6 +23,7 @@ if __name__ == "__main__":
         "renda_mensal": 2500,
         "valor_solicitado": 5000,
         "possui_divida_ativa": True,
+        "idade": 20,
     }
     resultado_2 = motor.executar(solicitacao_2)
     print("\nResultado final do objeto:", resultado_2)
@@ -34,6 +36,7 @@ if __name__ == "__main__":
         "renda_mensal": 5000,
         "valor_solicitado": 15000,
         "possui_divida_ativa": True,
+        "idade": 25,
     }
     resultado_3 = motor.executar(solicitacao_3)
     print("\nResultado final do objeto:", resultado_3)
@@ -46,6 +49,7 @@ if __name__ == "__main__":
         "renda_mensal": 4000,
         "valor_solicitado": 12000,
         "possui_divida_ativa": False,
+        "idade": 30,
     }
     resultado_4 = motor.executar(solicitacao_4)
     print("\nResultado final do objeto:", resultado_4)
