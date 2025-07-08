@@ -1,91 +1,59 @@
 import { MarkerType } from 'reactflow';
 
-let nodeId = 0;
-const generateNodeId = () => `loaded_node_${nodeId++}`;
+let nodeIdCounter = 0;
+const generateNodeId = () => `loaded_node_${nodeIdCounter++}`;
 
-function parseRule(rule, position) {
-  let nodes = [];
-  let edges = [];
-
-  if (!rule || typeof rule !== 'object') {
+function buildGraphRecursively(rule, position, nodes, edges, sharedData) {
+  if (rule === null || typeof rule !== 'object') {
     const id = generateNodeId();
-    nodes.push({ id, type: 'result', position, data: { value: rule } });
-    return { entryNodeId: id, nodes, edges };
+    nodes.push({ id, type: 'result', position, data: { ...sharedData, value: rule } });
+    return id;
   }
 
   const operator = Object.keys(rule)[0];
   const values = rule[operator];
   const currentNodeId = generateNodeId();
   let currentNode;
+  const Y_OFFSET = 200;
+  const X_SPACING = 300;
 
-  const Y_OFFSET = 180;
-  const X_SPACING = 280;
-
-  switch (operator) {
-    case 'if':
-      currentNode = { id: currentNodeId, type: 'if', position, data: {} };
-      nodes.push(currentNode);
-      
-      const [condition, thenBranch, elseBranch] = values;
-
-      const condResult = parseRule(condition, { x: position.x, y: position.y - Y_OFFSET });
-      nodes.push(...condResult.nodes);
-      edges.push(...condResult.edges);
-      edges.push({ id: `e-${condResult.entryNodeId}-${currentNodeId}`, source: condResult.entryNodeId, target: currentNodeId, targetHandle: 'condition', markerEnd: { type: MarkerType.ArrowClosed } });
-
-      const thenResult = parseRule(thenBranch, { x: position.x - X_SPACING / 2, y: position.y + Y_OFFSET });
-      nodes.push(...thenResult.nodes);
-      edges.push(...thenResult.edges);
-      edges.push({ id: `e-${currentNodeId}-then-${thenResult.entryNodeId}`, source: currentNodeId, sourceHandle: 'then', target: thenResult.entryNodeId, markerEnd: { type: MarkerType.ArrowClosed } });
-      
-      const elseResult = parseRule(elseBranch, { x: position.x + X_SPACING / 2, y: position.y + Y_OFFSET });
-      nodes.push(...elseResult.nodes);
-      edges.push(...elseResult.edges);
-      edges.push({ id: `e-${currentNodeId}-else-${elseResult.entryNodeId}`, source: currentNodeId, sourceHandle: 'else', target: elseResult.entryNodeId, markerEnd: { type: MarkerType.ArrowClosed } });
-      
-      break;
-
-    case 'and':
-    case 'or':
-      currentNode = { id: currentNodeId, type: operator, position, data: {} };
-      nodes.push(currentNode);
-      const [condA, condB] = values;
-      const resA = parseRule(condA, { x: position.x - X_SPACING, y: position.y - 70 });
-      nodes.push(...resA.nodes);
-      edges.push(...resA.edges);
-      edges.push({ id: `e-${resA.entryNodeId}-${currentNodeId}-a`, source: resA.entryNodeId, target: currentNodeId, targetHandle: 'a', markerEnd: { type: MarkerType.ArrowClosed } });
-
-      const resB = parseRule(condB, { x: position.x - X_SPACING, y: position.y + 70 });
-      nodes.push(...resB.nodes);
-      edges.push(...resB.edges);
-      edges.push({ id: `e-${resB.entryNodeId}-${currentNodeId}-b`, source: resB.entryNodeId, target: currentNodeId, targetHandle: 'b', markerEnd: { type: MarkerType.ArrowClosed } });
-      break;
-
-    case 'var':
-      currentNode = { id: currentNodeId, type: 'var', position, data: { field: values } };
-      nodes.push(currentNode);
-      break;
-
-    default:
-      currentNode = { 
-        id: currentNodeId, 
-        type: 'comparison', 
-        position, 
-        data: { operator, field: values[0]?.var, value: values[1] } 
-      };
-      nodes.push(currentNode);
-      break;
+  switch(operator) {
+      case 'if': currentNode = { id: currentNodeId, type: 'if', position, data: { ...sharedData } }; break;
+      case 'and': case 'or': currentNode = { id: currentNodeId, type: operator, position, data: { ...sharedData } }; break;
+      case 'var': currentNode = { id: currentNodeId, type: 'var', position, data: { ...sharedData, field: values } }; break;
+      default: currentNode = { id: currentNodeId, type: 'comparison', position, data: { ...sharedData, operator, field: values[0]?.var, value: values[1] } }; break;
   }
-  
-  return { entryNodeId: currentNodeId, nodes, edges };
+  nodes.push(currentNode);
+
+  if (operator === 'if') {
+      const [condition, thenBranch, elseBranch] = values;
+      const conditionNodeId = buildGraphRecursively(condition, { x: position.x, y: position.y - Y_OFFSET }, nodes, edges, sharedData);
+      if(conditionNodeId) edges.push({ id: `e-${conditionNodeId}-${currentNodeId}`, source: conditionNodeId, target: currentNodeId, targetHandle: 'condition', markerEnd: { type: MarkerType.ArrowClosed } });
+
+      const thenNodeId = buildGraphRecursively(thenBranch, { x: position.x - X_SPACING, y: position.y + Y_OFFSET }, nodes, edges, sharedData);
+      if(thenNodeId) edges.push({ id: `e-${currentNodeId}-then-${thenNodeId}`, source: currentNodeId, sourceHandle: 'then', target: thenNodeId, targetHandle: 'entry', markerEnd: { type: MarkerType.ArrowClosed } });
+
+      const elseNodeId = buildGraphRecursively(elseBranch, { x: position.x + X_SPACING, y: position.y + Y_OFFSET }, nodes, edges, sharedData);
+      if(elseNodeId) edges.push({ id: `e-${currentNodeId}-else-${elseNodeId}`, source: currentNodeId, sourceHandle: 'else', target: elseNodeId, targetHandle: 'entry', markerEnd: { type: MarkerType.ArrowClosed } });
+  } else if (operator === 'and' || operator === 'or') {
+      const [condA, condB] = values;
+      const nodeA_Id = buildGraphRecursively(condA, { x: position.x - X_SPACING, y: position.y - 70 }, nodes, edges, sharedData);
+      if(nodeA_Id) edges.push({ id: `e-${nodeA_Id}-${currentNodeId}-a`, source: nodeA_Id, target: currentNodeId, targetHandle: 'a', markerEnd: { type: MarkerType.ArrowClosed } });
+      
+      const nodeB_Id = buildGraphRecursively(condB, { x: position.x - X_SPACING, y: position.y + 70 }, nodes, edges, sharedData);
+      if(nodeB_Id) edges.push({ id: `e-${nodeB_Id}-${currentNodeId}-b`, source: nodeB_Id, target: currentNodeId, targetHandle: 'b', markerEnd: { type: MarkerType.ArrowClosed } });
+  }
+  return currentNodeId;
 }
 
-export const jsonToGraph = (jsonRule) => {
+export const jsonToGraph = (jsonRule, sharedData) => {
   if (!jsonRule || typeof jsonRule !== 'object' || Object.keys(jsonRule).length === 0) {
     return { nodes: [], edges: [] };
   }
-  nodeId = 0;
-  const { nodes, edges } = parseRule(jsonRule, { x: 500, y: 250 });
+  nodeIdCounter = 0;
+  const nodes = [];
+  const edges = [];
+  buildGraphRecursively(jsonRule, { x: 600, y: 150 }, nodes, edges, sharedData);
   return { nodes, edges };
 };
 
