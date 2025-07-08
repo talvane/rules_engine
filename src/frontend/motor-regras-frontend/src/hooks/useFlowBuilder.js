@@ -5,7 +5,7 @@ import { graphToJsonLogic } from '../utils';
 let id = 0;
 const getId = () => `node_${id++}`;
 
-export const useFlowBuilder = () => {
+export const useFlowBuilder = (availableFields) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [generatedJson, setGeneratedJson] = useState({});
@@ -21,7 +21,7 @@ export const useFlowBuilder = () => {
     setEdges((eds) => addEdge(params, eds));
   }, [setEdges, nodes]);
 
-  const updateNodeData = (nodeId, newData) => {
+  const updateNodeData = useCallback((nodeId, newData) => {
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === nodeId) {
@@ -30,17 +30,17 @@ export const useFlowBuilder = () => {
         return node;
       })
     );
-  };
+  }, [setNodes]);
 
   const addNode = (type, value = '') => {
     const newNode = {
       id: getId(),
       type,
-      // Posição de novos nós melhorada para evitar sobreposição
       position: { x: 250, y: 50 + (nodes.length % 10) * 50 },
       data: {
         value: value,
         onUpdate: updateNodeData,
+        availableFields: availableFields, // Usa os campos recebidos
       },
     };
     setNodes((nds) => nds.concat(newNode));
@@ -56,9 +56,15 @@ export const useFlowBuilder = () => {
     setGeneratedJson(jsonResult);
   };
 
+  const setFlow = useCallback(({ nodes, edges }) => {
+    setNodes(nodes);
+    setEdges(edges);
+  }, [setNodes, setEdges]);
+
   return {
     nodes, edges, generatedJson,
     onNodesChange, onEdgesChange, onConnect,
     addNode, deleteNode, handleGenerateJson,
+    setFlow, updateNodeData
   };
 };

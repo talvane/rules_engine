@@ -1,7 +1,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 
-export default () => {
+const IfNode = () => {
   return (
     <div className="react-flow-node if-node">
       <div className="handle-label top" title="Recebe o resultado de uma lógica (Comparação, AND, etc.)">Condição</div>
@@ -22,3 +22,5 @@ export default () => {
     </div>
   );
 };
+
+export default IfNode;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 
-export default ({ data }) => (
+const ResultNode = ({ data }) => (
   <div className="react-flow-node result-node">
     <div className="handle-label left" title="Recebe o fluxo de uma regra">Entrada</div>
     <Handle type="target" position={Position.Left} className="handle-target" />
@@ -10,3 +10,5 @@ export default ({ data }) => (
     </div>
   </div>
 );
+
+export default ResultNode;

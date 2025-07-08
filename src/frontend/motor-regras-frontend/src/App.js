@@ -1,16 +1,13 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
-  addEdge,
-  useNodesState,
-  useEdgesState,
   Controls,
   Background,
   MiniMap,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import { FieldsProvider } from './contexts/FieldsContext';
+import { useFields, FieldsProvider } from './contexts/FieldsContext';
 import { useFlowBuilder } from './hooks/useFlowBuilder';
 import Sidebar from './Sidebar';
 import ErrorBoundary from './ErrorBoundary';
@@ -21,9 +18,10 @@ import VarNode from './nodes/VarNode';
 import AndNode from './nodes/AndNode';
 import OrNode from './nodes/OrNode';
 import JsonOutput from './JsonOutput';
-import TrashCan from './TrashCan'; // Importa a lixeira
+import TrashCan from './TrashCan';
 import Explanation from './Explanation';
 import './App.css';
+import { jsonToGraph } from './utils';
 
 const nodeTypes = {
   if: IfNode, comparison: ComparisonNode, result: ResultNode,
@@ -32,13 +30,14 @@ const nodeTypes = {
 
 // Este componente interno agora conterá toda a lógica de fluxo e da lixeira.
 const FlowBuilder = () => {
+  const { availableFields } = useFields();
   const {
     nodes, edges, generatedJson,
     onNodesChange, onEdgesChange, onConnect,
-    addNode, deleteNode, handleGenerateJson
-  } = useFlowBuilder();
+    addNode, deleteNode, handleGenerateJson, setFlow,
+    updateNodeData,
+  } = useFlowBuilder(availableFields);
   
-  // --- LÓGICA DA LIXEIRA REINTRODUZIDA AQUI ---
   const trashCanRef = useRef(null);
   const [isDraggingOverTrash, setIsDraggingOverTrash] = useState(false);
 
@@ -64,10 +63,25 @@ const FlowBuilder = () => {
     setIsDraggingOverTrash(false);
   };
 
+  const handleLoadJson = (jsonRule) => {
+    // 1. Gera a estrutura base do grafo a partir do JSON
+    const { nodes: newNodes, edges: newEdges } = jsonToGraph(jsonRule);
+    // 2. "Enriquece" cada nó com os dados dinâmicos que ele precisa para funcionar
+    const enrichedNodes = newNodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        onUpdate: updateNodeData, // Injeta a função de callback
+        availableFields: availableFields, // Injeta a lista de campos
+      }
+    }));    
+    // 3. Define o novo estado do fluxo
+    setFlow({ nodes: enrichedNodes, edges: newEdges });
+  };
+
   return (
-    <div className="app-container">
-      {/* O Sidebar não precisa da função de adicionar campo, pois ela é pega do contexto */}
-      <Sidebar addNode={addNode} />
+    <div className="app-container">      
+      <Sidebar addNode={addNode} onLoadJson={handleLoadJson} />
       <div className="reactflow-wrapper">
         <ReactFlow
           nodes={nodes}

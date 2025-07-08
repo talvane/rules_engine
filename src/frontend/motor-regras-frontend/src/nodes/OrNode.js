@@ -1,7 +1,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 
-export default () => {
+const OrNode = () => {
   return (
     <div className="react-flow-node logical-node or-node">
       <div className="handle-label left-a" title="Entrada para a primeira condição">Entrada A</div>
@@ -16,3 +16,5 @@ export default () => {
     </div>
   );
 };
+
+export default OrNode;

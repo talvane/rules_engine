@@ -9,26 +9,49 @@ REGRAS_VALIDACAO = [
 
 # Regra de processamento
 REGRA_PROCESSAMENTO = {
-    "if": [
-        {"<": [{"var": "idade"}, 18]},
-        "RECUSADO",
+  "if": [
+    {
+      "<": [
         {
-            "if": [
-                {"var": "possui_divida_ativa"},
-                "ANALISE_MANUAL",
-                {
-                    "if": [
-                        {
-                            "and": [
-                                {"<": [{"var": "pontuacao_credito"}, 500]},
-                                {"<": [{"var": "renda_mensal"}, 1000]},
-                            ]
-                        },
-                        "ANALISE_MANUAL",
-                        "APROVADO",
-                    ]
-                },
-            ]
+          "var": "idade"
         },
-    ]
+        18
+      ]
+    },
+    "RECUSADO",
+    {
+      "if": [
+        {
+          "var": "possui_divida_ativa"
+        },
+        "ANALISE_MANUAL",
+        {
+          "if": [
+            {
+              "and": [
+                {
+                  "<": [
+                    {
+                      "var": "pontuacao_credito"
+                    },
+                    500
+                  ]
+                },
+                {
+                  "<": [
+                    {
+                      "var": "renda_mensal"
+                    },
+                    1000
+                  ]
+                }
+              ]
+            },
+            "ANALISE_MANUAL",
+            "APROVADO"
+          ]
+        }
+      ]
+    }
+  ]
 }
