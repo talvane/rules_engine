@@ -1,8 +1,87 @@
 import sys
 from functools import reduce
+from typing import Any, Dict, List, Union, Optional, Callable
 
 
-def jsonLogic(tests, data=None, functions=None):
+def _get_nested_value(path: str, data: Dict[str, Any], not_found: Any = None) -> Any:
+    """
+    Navega através de estruturas de dados aninhadas usando notação de ponto.
+
+    Args:
+        path: Caminho usando notação de ponto (ex: "usuario.nome")
+        data: Dados para navegar
+        not_found: Valor retornado quando o caminho não é encontrado
+
+    Returns:
+        Valor encontrado ou not_found
+    """
+
+    def _navigate(current_data: Any, key: str) -> Any:
+        if isinstance(current_data, dict):
+            return current_data.get(str(key), not_found)
+        elif isinstance(current_data, (list, tuple)):
+            if str(key).lstrip("-").isdigit() and int(key) < len(current_data):
+                return current_data[int(key)]
+        return not_found
+
+    return reduce(_navigate, str(path).split("."), data)
+
+
+def _parse_operation(tests: Dict[str, Any]) -> tuple:
+    """
+    Extrai a operação e seus valores de um teste JSON Logic.
+
+    Args:
+        tests: Dicionário contendo a operação e valores
+
+    Returns:
+        Tupla com (operação, valores)
+    """
+    try:
+        op = next(iter(tests))
+        values = tests[op]
+        return op, values
+    except StopIteration:
+        return None, None
+
+
+def _execute_operation(
+    op: str,
+    values: Any,
+    data: Dict[str, Any],
+    functions: Dict[str, Callable],
+    operations: Dict[str, Callable],
+) -> Any:
+    """
+    Executa uma operação específica com os valores fornecidos.
+
+    Args:
+        op: Nome da operação
+        values: Valores para a operação
+        data: Dados de contexto
+        functions: Funções registradas
+        operations: Dicionário de operações disponíveis
+
+    Returns:
+        Resultado da operação
+    """
+    if op not in operations:
+        raise RuntimeError(f"Operação não reconhecida: {op}")
+
+    if not isinstance(values, (list, tuple)):
+        values = [values]
+
+    # Processa valores recursivamente
+    processed_values = map(lambda val: jsonLogic(val, data, functions), values)
+
+    return operations[op](*processed_values)
+
+
+def jsonLogic(
+    tests: Any,
+    data: Optional[Dict[str, Any]] = None,
+    functions: Optional[Dict[str, Callable]] = None,
+) -> Any:
     """
     Executa a lógica definida em uma estrutura de testes (JSON/dict)
     sobre um conjunto de dados, com suporte a chamadas de funções .
@@ -73,13 +152,11 @@ def jsonLogic(tests, data=None, functions=None):
         return tests
 
     data = data if data is not None else {}
-    # Inicializa o registro de funções  como um dicionário vazio se não for fornecido
     functions = functions if functions is not None else {}
 
-    try:
-        op = next(iter(tests))
-        values = tests[op]
-    except StopIteration:
+    # Extrai operação e valores
+    op, values = _parse_operation(tests)
+    if op is None:
         return None
 
     def _less_than(*v):
@@ -122,8 +199,10 @@ def jsonLogic(tests, data=None, functions=None):
         func = functions[func_name]
         return func(*args[1:])
 
-    # Define as operações suportadas
-    operations = {
+    # Define as operações suportadas organizadas por categoria
+
+    # Operações de comparação
+    comparison_ops = {
         "==": lambda a, b: a == b,
         "===": lambda a, b: a is b,
         "!=": lambda a, b: a != b,
@@ -132,49 +211,59 @@ def jsonLogic(tests, data=None, functions=None):
         ">=": lambda a, b: a >= b,
         "<": _less_than,
         "<=": _less_than_or_equal,
+    }
+
+    # Operações lógicas
+    logical_ops = {
         "!": lambda a: not a,
-        "%": lambda a, b: a % b,
         "and": lambda *args: all(args),
         "or": lambda *args: any(args),
         "?:": lambda a, b, c: b if a else c,
-        "log": lambda a: print(a, file=sys.stdout) or a,
-        "in": lambda a, b: (a in b)
-        if isinstance(b, (list, tuple, dict, str))
-        else False,
-        "var": lambda a, not_found=None: reduce(
-            lambda d, key: (
-                d.get(str(key), not_found)
-                if isinstance(d, dict)
-                else d[int(key)]
-                if isinstance(d, (list, tuple))
-                and str(key).lstrip("-").isdigit()
-                and int(key) < len(d)
-                else not_found
-            ),
-            str(a).split("."),
-            data,
-        ),
-        "cat": lambda *args: "".join(map(str, args)),
+    }
+
+    # Operações matemáticas
+    math_ops = {
         "+": lambda *args: sum(map(float, args)),
-        "*": lambda *args: reduce(lambda total, arg: total * float(arg), args, 1.0),
         "-": lambda a, b=None: -a if b is None else a - b,
+        "*": lambda *args: reduce(lambda total, arg: total * float(arg), args, 1.0),
         "/": lambda a, b=None: a if b is None else float(a) / float(b),
+        "%": lambda a, b: a % b,
         "min": lambda *args: min(args),
         "max": lambda *args: max(args),
+    }
+
+    # Operações de manipulação de dados
+    data_ops = {
+        "var": lambda a, not_found=None: _get_nested_value(a, data, not_found),
+        "in": lambda a, b: (
+            (a in b) if isinstance(b, (list, tuple, dict, str)) else False
+        ),
         "count": lambda *args: sum(1 for a in args if a),
+    }
+
+    # Operações de string
+    string_ops = {
+        "cat": lambda *args: "".join(map(str, args)),
+    }
+
+    # Operações de sistema
+    system_ops = {
+        "log": lambda a: print(a, file=sys.stdout) or a,
         "apply": _apply_function,
+    }
+
+    # Combina todas as operações
+    operations = {
+        **comparison_ops,
+        **logical_ops,
+        **math_ops,
+        **data_ops,
+        **string_ops,
+        **system_ops,
     }
 
     # "if" é um alias comum para o operador ternário "?:"
     operations["if"] = operations["?:"]
 
-    if op not in operations:
-        raise RuntimeError(f"Operação não reconhecida: {op}")
-
-    if not isinstance(values, (list, tuple)):
-        values = [values]
-
-    # Passa o registro 'functions' para as chamadas recursivas
-    processed_values = map(lambda val: jsonLogic(val, data, functions), values)
-
-    return operations[op](*processed_values)
+    # Executa a operação
+    return _execute_operation(op, values, data, functions, operations)
