@@ -1,8 +1,3 @@
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
-
 from src.lib.json_logic import jsonLogic, _get_nested_value
 
 

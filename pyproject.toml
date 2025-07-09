@@ -7,9 +7,11 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+asyncio = "^3.4.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
+pytest-asyncio = "^1.0.0"
 
 [[tool.mypy.overrides]]
 module = ["motor_regras.*"]
