@@ -20,6 +20,8 @@ import OrNode from './nodes/OrNode';
 import JsonOutput from './JsonOutput';
 import TrashCan from './TrashCan';
 import Explanation from './Explanation';
+import AIAnalyzer from './AIAnalyzer';
+import LocalAIAnalyzer from './LocalAIAnalyzer';
 import './App.css';
 import { jsonToGraph } from './utils';
 
@@ -104,6 +106,18 @@ const FlowBuilder = () => {
         <button onClick={handleGenerateJson} className="generate-button">Gerar JSON da Regra</button>
         <JsonOutput generatedJson={generatedJson} />
         <Explanation generatedJson={generatedJson} />
+        <AIAnalyzer 
+          nodes={nodes}
+          edges={edges}
+          generatedJson={generatedJson}
+          availableFields={availableFields}
+        />
+        <LocalAIAnalyzer 
+          nodes={nodes}
+          edges={edges}
+          generatedJson={generatedJson}
+          availableFields={availableFields}
+        />
       </div>
     </div>
   );
