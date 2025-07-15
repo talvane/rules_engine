@@ -22,6 +22,7 @@ import TrashCan from './TrashCan';
 import Explanation from './Explanation';
 import AIAnalyzer from './AIAnalyzer';
 import LocalAIAnalyzer from './LocalAIAnalyzer';
+import RuleTester from './RuleTester';
 import './App.css';
 import { jsonToGraph } from './utils';
 
@@ -115,6 +116,10 @@ const FlowBuilder = () => {
         <LocalAIAnalyzer 
           nodes={nodes}
           edges={edges}
+          generatedJson={generatedJson}
+          availableFields={availableFields}
+        />
+        <RuleTester 
           generatedJson={generatedJson}
           availableFields={availableFields}
         />

@@ -248,3 +248,5 @@ lerna-debug.log
 yarn-error.log
 *.orig
 .vscode
+# Local Netlify folder
+.netlify

@@ -1,0 +1,295 @@
+.rule-tester {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.rule-tester h3 {
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.processing-options {
+  background: #e9ecef;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.processing-options h4 {
+  margin: 0 0 10px 0;
+  color: #495057;
+  font-size: 1em;
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.95em;
+}
+
+.radio-option input[type="radio"] {
+  cursor: pointer;
+}
+
+.status-indicator {
+  margin-left: 8px;
+  font-size: 0.8em;
+}
+
+.status-indicator.online {
+  color: #28a745;
+}
+
+.status-indicator.offline {
+  color: #dc3545;
+}
+
+.status-indicator.unknown {
+  color: #ffc107;
+}
+
+.backend-info {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.backend-info p {
+  margin: 0 0 8px 0;
+  font-size: 0.9em;
+  color: #856404;
+}
+
+.backend-info ol {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  font-size: 0.85em;
+  color: #856404;
+}
+
+.backend-info code {
+  background: #f8f9fa;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.input-section {
+  margin-bottom: 20px;
+}
+
+.input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.input-header label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.debug-button {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.debug-button:hover {
+  background: #138496;
+}
+
+.sample-data-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sample-data-btn:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.sample-data-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+.input-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.input-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.test-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 20px;
+}
+
+.test-button:hover:not(:disabled) {
+  background: #218838;
+}
+
+.test-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.result-section {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.result-section h4 {
+  color: #155724;
+  margin: 0 0 10px 0;
+  font-size: 1.1em;
+}
+
+.result-value {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.result-type {
+  background: #155724;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  min-width: 60px;
+  text-align: center;
+}
+
+.result-type.boolean {
+  background: #6f42c1;
+}
+
+.result-type.number {
+  background: #fd7e14;
+}
+
+.result-type.string {
+  background: #17a2b8;
+}
+
+.result-content {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+  color: #155724;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 4px 8px;
+  border-radius: 3px;
+  flex: 1;
+  white-space: pre-wrap;
+}
+
+.current-rule {
+  background: #e9ecef;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+.current-rule h4 {
+  color: #495057;
+  margin: 0 0 10px 0;
+  font-size: 1em;
+}
+
+.rule-json {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85em;
+  color: #495057;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+@media (max-width: 768px) {
+  .rule-tester {
+    padding: 15px;
+  }
+  
+  .input-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .result-value {
+    flex-direction: column;
+    gap: 5px;
+  }
+}

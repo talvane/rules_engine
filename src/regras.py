@@ -30,7 +30,7 @@ REGRA_PROCESSAMENTO = {
             {
               "and": [
                 {
-                  "<": [
+                  ">=": [
                     {
                       "var": "pontuacao_credito"
                     },
@@ -38,7 +38,7 @@ REGRA_PROCESSAMENTO = {
                   ]
                 },
                 {
-                  "<": [
+                  ">=": [
                     {
                       "var": "renda_mensal"
                     },
@@ -47,8 +47,8 @@ REGRA_PROCESSAMENTO = {
                 }
               ]
             },
-            "ANALISE_MANUAL",
-            "APROVADO"
+            "APROVADO",
+            "ANALISE_MANUAL"
           ]
         }
       ]

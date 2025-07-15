@@ -9,6 +9,7 @@ export const FieldsProvider = ({ children }) => {
     { value: 'pontuacao_credito', label: 'Pontuação Crédito' },
     { value: 'renda_mensal', label: 'Renda Mensal' },
     { value: 'possui_divida_ativa', label: 'Possui Dívida Ativa' },
+    { value: 'idade', label: 'Idade' },
   ]);
 
   const addNewField = (newFieldName) => {
