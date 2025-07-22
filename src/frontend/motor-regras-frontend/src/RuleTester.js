@@ -176,11 +176,11 @@ const RuleTester = ({ generatedJson, availableFields }) => {
         console.log(`Skipping invalid field: ${fieldName}`);
         return;
       }
-      
+
       // Infere o tipo baseado no nome do campo
       if (fieldName.includes('pontuacao') || fieldName.includes('renda') || 
-          fieldName.includes('valor') || fieldName.includes('idade') || 
-          fieldName.includes('score') || fieldName.includes('numero')) {
+          fieldName.includes('valor') || fieldName.includes('idade') || fieldName.includes('Idade') ||
+          fieldName.includes('score') || fieldName.includes('Score') || fieldName.includes('numero')) {
         sampleData[fieldName] = Math.floor(Math.random() * 1000) + 100;
       } else if (fieldName.includes('possui') || fieldName.includes('ativo') || 
                  fieldName.includes('divida') || fieldName.includes('aprovado') ||
