@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useFields } from '../contexts/FieldsContext';
 
@@ -16,6 +16,14 @@ const parseInputValue = (valueString) => {
 
 export default memo(({ data, id }) => {
   const { availableFields } = useFields();
+
+  // Efeito para definir automaticamente o campo quando criado via addBiro
+  useEffect(() => {
+    // Se há um valor inicial (fieldName do addBiro) e ainda não foi definido um campo
+    if (data.value && !data.field && availableFields.some(field => field.value === data.value)) {
+      data.onUpdate(id, { ...data, field: data.value, value: '' });
+    }
+  }, [data, id, availableFields]);
 
   const handleChange = (evt) => {
     const { name, value } = evt.target;

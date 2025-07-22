@@ -1,177 +1,193 @@
-import React, { useState, useCallback } from 'react';
-import './AIAnalyzer.css';
+import React, { useState, useCallback } from "react";
+import "./AIAnalyzer.css";
 
 const AIAnalyzer = ({ nodes, edges, generatedJson, availableFields }) => {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
   // Funções auxiliares para análise
   const calculateComplexity = useCallback((nodes, edges) => {
-    const ifNodes = nodes.filter(n => n.type === 'if').length;
-    const logicalNodes = nodes.filter(n => n.type === 'and' || n.type === 'or').length;
-    const comparisonNodes = nodes.filter(n => n.type === 'comparison').length;
-    
+    const ifNodes = nodes.filter((n) => n.type === "if").length;
+    const logicalNodes = nodes.filter(
+      (n) => n.type === "and" || n.type === "or"
+    ).length;
+    const comparisonNodes = nodes.filter((n) => n.type === "comparison").length;
+
     return ifNodes * 2 + logicalNodes * 1.5 + comparisonNodes * 1;
   }, []);
 
   const calculateGraphDepth = useCallback((nodes, edges) => {
     const visited = new Set();
     const depths = new Map();
-    
+
     const dfs = (nodeId, depth) => {
       if (visited.has(nodeId)) return depths.get(nodeId) || 0;
-      
+
       visited.add(nodeId);
       depths.set(nodeId, depth);
-      
-      const outgoingEdges = edges.filter(e => e.source === nodeId);
+
+      const outgoingEdges = edges.filter((e) => e.source === nodeId);
       let maxChildDepth = depth;
-      
-      outgoingEdges.forEach(edge => {
+
+      outgoingEdges.forEach((edge) => {
         const childDepth = dfs(edge.target, depth + 1);
         maxChildDepth = Math.max(maxChildDepth, childDepth);
       });
-      
+
       return maxChildDepth;
     };
-    
-    const rootNodes = nodes.filter(node => 
-      !edges.some(edge => edge.target === node.id)
+
+    const rootNodes = nodes.filter(
+      (node) => !edges.some((edge) => edge.target === node.id)
     );
-    
-    return Math.max(...rootNodes.map(node => dfs(node.id, 0)));
+
+    return Math.max(...rootNodes.map((node) => dfs(node.id, 0)));
   }, []);
 
   const detectCircularDependencies = useCallback((nodes, edges) => {
     const visited = new Set();
     const recursionStack = new Set();
-    
+
     const hasCycle = (nodeId) => {
       if (recursionStack.has(nodeId)) return true;
       if (visited.has(nodeId)) return false;
-      
+
       visited.add(nodeId);
       recursionStack.add(nodeId);
-      
-      const outgoingEdges = edges.filter(e => e.source === nodeId);
+
+      const outgoingEdges = edges.filter((e) => e.source === nodeId);
       for (const edge of outgoingEdges) {
         if (hasCycle(edge.target)) return true;
       }
-      
+
       recursionStack.delete(nodeId);
       return false;
     };
-    
-    return nodes.some(node => hasCycle(node.id));
+
+    return nodes.some((node) => hasCycle(node.id));
   }, []);
 
   const extractOperators = useCallback((json) => {
     const operators = new Set();
-    
+
     const traverse = (obj) => {
-      if (typeof obj === 'object' && obj !== null) {
-        Object.keys(obj).forEach(key => {
+      if (typeof obj === "object" && obj !== null) {
+        Object.keys(obj).forEach((key) => {
           operators.add(key);
           if (Array.isArray(obj[key])) {
             obj[key].forEach(traverse);
-          } else if (typeof obj[key] === 'object') {
+          } else if (typeof obj[key] === "object") {
             traverse(obj[key]);
           }
         });
       }
     };
-    
+
     traverse(json);
     return Array.from(operators);
   }, []);
 
   const extractVariables = useCallback((json) => {
     const variables = new Set();
-    
+
     const traverse = (obj) => {
-      if (typeof obj === 'object' && obj !== null) {
+      if (typeof obj === "object" && obj !== null) {
         if (obj.var) {
           variables.add(obj.var);
         }
-        Object.values(obj).forEach(value => {
-          if (typeof value === 'object' || Array.isArray(value)) {
+        Object.values(obj).forEach((value) => {
+          if (typeof value === "object" || Array.isArray(value)) {
             traverse(value);
           }
         });
       }
     };
-    
+
     traverse(json);
     return Array.from(variables);
   }, []);
 
   const extractConstants = useCallback((json) => {
     const constants = new Set();
-    
+
     const traverse = (obj) => {
-      if (typeof obj === 'object' && obj !== null) {
-        Object.values(obj).forEach(value => {
-          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      if (typeof obj === "object" && obj !== null) {
+        Object.values(obj).forEach((value) => {
+          if (
+            typeof value === "string" ||
+            typeof value === "number" ||
+            typeof value === "boolean"
+          ) {
             constants.add(value);
           } else if (Array.isArray(value)) {
             value.forEach(traverse);
-          } else if (typeof value === 'object') {
+          } else if (typeof value === "object") {
             traverse(value);
           }
         });
       }
     };
-    
+
     traverse(json);
     return Array.from(constants);
   }, []);
 
-  const analyzeGraphStructure = useCallback((nodes, edges) => {
-    const nodeTypes = nodes.reduce((acc, node) => {
-      acc[node.type] = (acc[node.type] || 0) + 1;
-      return acc;
-    }, {});
+  const analyzeGraphStructure = useCallback(
+    (nodes, edges) => {
+      const nodeTypes = nodes.reduce((acc, node) => {
+        acc[node.type] = (acc[node.type] || 0) + 1;
+        return acc;
+      }, {});
 
-    const complexity = calculateComplexity(nodes, edges);
-    const depth = calculateGraphDepth(nodes, edges);
-    const orphanNodes = nodes.filter(node => 
-      !edges.some(edge => edge.source === node.id || edge.target === node.id)
-    );
+      const complexity = calculateComplexity(nodes, edges);
+      const depth = calculateGraphDepth(nodes, edges);
+      const orphanNodes = nodes.filter(
+        (node) =>
+          !edges.some(
+            (edge) => edge.source === node.id || edge.target === node.id
+          )
+      );
 
-    return {
-      totalNodes: nodes.length,
-      totalEdges: edges.length,
-      nodeTypes,
-      complexity,
-      depth,
-      orphanNodes: orphanNodes.length,
-      hasCircularDependencies: detectCircularDependencies(nodes, edges)
-    };
-  }, [calculateComplexity, calculateGraphDepth, detectCircularDependencies]);
+      return {
+        totalNodes: nodes.length,
+        totalEdges: edges.length,
+        nodeTypes,
+        complexity,
+        depth,
+        orphanNodes: orphanNodes.length,
+        hasCircularDependencies: detectCircularDependencies(nodes, edges),
+      };
+    },
+    [calculateComplexity, calculateGraphDepth, detectCircularDependencies]
+  );
 
-  const analyzeJsonLogic = useCallback((json) => {
-    if (!json || Object.keys(json).length === 0) {
-      return { isEmpty: true };
-    }
+  const analyzeJsonLogic = useCallback(
+    (json) => {
+      if (!json || Object.keys(json).length === 0) {
+        return { isEmpty: true };
+      }
 
-    const operators = extractOperators(json);
-    const variables = extractVariables(json);
-    const constants = extractConstants(json);
+      const operators = extractOperators(json);
+      const variables = extractVariables(json);
+      const constants = extractConstants(json);
 
-    return {
-      isEmpty: false,
-      operators,
-      variables,
-      constants,
-      jsonSize: JSON.stringify(json).length
-    };
-  }, [extractOperators, extractVariables, extractConstants]);
+      return {
+        isEmpty: false,
+        operators,
+        variables,
+        constants,
+        jsonSize: JSON.stringify(json).length,
+      };
+    },
+    [extractOperators, extractVariables, extractConstants]
+  );
 
-  const createAnalysisPrompt = useCallback((graphAnalysis, jsonAnalysis, fields) => {
-    return `
+  const createAnalysisPrompt = useCallback(
+    (graphAnalysis, jsonAnalysis, fields) => {
+      return `
 Analise esta regra de negócio criada em um editor visual de fluxo:
 
 ESTRUTURA DO GRAFO:
@@ -184,10 +200,14 @@ ESTRUTURA DO GRAFO:
 - Dependências circulares: ${graphAnalysis.hasCircularDependencies}
 
 LÓGICA JSON:
-${jsonAnalysis.isEmpty ? 'Nenhuma lógica gerada ainda' : JSON.stringify(jsonAnalysis)}
+${
+  jsonAnalysis.isEmpty
+    ? "Nenhuma lógica gerada ainda"
+    : JSON.stringify(jsonAnalysis)
+}
 
 CAMPOS DISPONÍVEIS:
-${fields.map(f => `- ${f.name}: ${f.type}`).join('\n')}
+${fields.map((f) => `- ${f.name}: ${f.type}`).join("\n")}
 
 Por favor, forneça uma análise detalhada em português brasileiro incluindo:
 1. Avaliação da complexidade e legibilidade
@@ -199,31 +219,80 @@ Por favor, forneça uma análise detalhada em português brasileiro incluindo:
 
 Seja específico e prático nas suas recomendações.
 `;
-  }, []);
+    },
+    []
+  );
 
   const callAIAPI = useCallback(async (prompt, apiKey) => {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'Você é um especialista em análise de regras de negócio e otimização de fluxos. Forneça análises detalhadas e sugestões práticas.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7
-      })
-    });
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Você é um especialista em regras usando a lib https://jsonlogic.com/ as pessoas irão te pedir para construir regras e você sempre devolverá utilizando o seguinte formato: { 
+                          "if": [ 
+                          { 
+                          "<": [ 
+                          { 
+                          "var": "idade" 
+                          }, 
+                          18 
+                          ] 
+                          }, 
+                          "RECUSADO", 
+                          { 
+                          "if": [ 
+                          { 
+                          "var": "possui_divida_ativa" 
+                          }, 
+                          "ANALISE_MANUAL", 
+                          { 
+                          "if": [ 
+                          { 
+                          "and": [ 
+                          { 
+                          ">=": [ 
+                          { 
+                          "var": "pontuacao_credito" 
+                          }, 
+                          500 
+                          ] 
+                          }, 
+                          { 
+                          ">=": [ 
+                          { 
+                          "var": "renda_mensal" 
+                          }, 
+                          1000 
+                          ] 
+                          } 
+                          ] 
+                          }, 
+                          "APROVADO", 
+                          "ANALISE_MANUAL" 
+                          ] 
+                          } 
+                          ] 
+                          } 
+                          ] 
+                          } , caso a pessoa peça alguma coisa que não seja lógica você precisa responder que não consegue montar uma lógica com essa informação
+
+                          .\n\n${prompt}`,
+                },
+              ],
+            },
+          ],
+        }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Erro da API: ${response.status}`);
@@ -231,9 +300,11 @@ Seja específico e prático nas suas recomendações.
 
     const data = await response.json();
     return {
-      suggestions: data.choices[0].message.content,
-      model: data.model,
-      usage: data.usage
+      suggestions:
+        data.candidates?.[0]?.content?.parts?.[0]?.text ||
+        "Sem resposta da API",
+      model: "gemini-2.0-flash",
+      usage: null, // Gemini API não fornece dados de uso de tokens como o OpenAI
     };
   }, []);
 
@@ -247,34 +318,48 @@ Seja específico e prático nas suas recomendações.
     try {
       const graphAnalysis = analyzeGraphStructure(nodes, edges);
       const jsonAnalysis = analyzeJsonLogic(generatedJson);
-      
-      const analysisPrompt = createAnalysisPrompt(graphAnalysis, jsonAnalysis, availableFields);
-      
+
+      const analysisPrompt = createAnalysisPrompt(
+        graphAnalysis,
+        jsonAnalysis,
+        availableFields
+      );
+
       const aiResponse = await callAIAPI(analysisPrompt, apiKey);
-      
+
       setAnalysis({
         ...aiResponse,
         graphStats: graphAnalysis,
-        timestamp: new Date().toLocaleString('pt-BR')
+        timestamp: new Date().toLocaleString("pt-BR"),
       });
     } catch (error) {
-      console.error('Erro na análise:', error);
+      console.error("Erro na análise:", error);
       setAnalysis({
-        error: 'Erro ao analisar o grafo. Verifique sua chave da API.',
-        timestamp: new Date().toLocaleString('pt-BR')
+        error: "Erro ao analisar o grafo. Verifique sua chave da API.",
+        timestamp: new Date().toLocaleString("pt-BR"),
       });
     } finally {
       setIsAnalyzing(false);
     }
-  }, [nodes, edges, generatedJson, availableFields, apiKey, analyzeGraphStructure, analyzeJsonLogic, createAnalysisPrompt, callAIAPI]);
+  }, [
+    nodes,
+    edges,
+    generatedJson,
+    availableFields,
+    apiKey,
+    analyzeGraphStructure,
+    analyzeJsonLogic,
+    createAnalysisPrompt,
+    callAIAPI,
+  ]);
 
   const handleSaveApiKey = () => {
-    localStorage.setItem('ai-analyzer-api-key', apiKey);
+    localStorage.setItem("gemini-api-key", apiKey);
     setShowApiKeyInput(false);
   };
 
   const handleLoadApiKey = () => {
-    const savedKey = localStorage.getItem('ai-analyzer-api-key');
+    const savedKey = localStorage.getItem("gemini-api-key");
     if (savedKey) {
       setApiKey(savedKey);
     }
@@ -287,24 +372,24 @@ Seja específico e prático nas suas recomendações.
   return (
     <div className="ai-analyzer">
       <div className="ai-analyzer-header">
-        <button 
+        <button
           className="ai-analyzer-toggle"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          🤖 Análise por IA {isExpanded ? '▼' : '▶'}
+          🤖 Análise por IA {isExpanded ? "▼" : "▶"}
         </button>
-        
+
         {!showApiKeyInput && (
-          <button 
+          <button
             className="analyze-button"
             onClick={analyzeGraph}
             disabled={isAnalyzing || nodes.length === 0}
           >
-            {isAnalyzing ? 'Analisando...' : 'Analisar Grafo'}
+            {isAnalyzing ? "Analisando..." : "Analisar Grafo"}
           </button>
         )}
-        
-        <button 
+
+        <button
           className="config-button"
           onClick={() => setShowApiKeyInput(!showApiKeyInput)}
         >
@@ -316,7 +401,7 @@ Seja específico e prático nas suas recomendações.
         <div className="api-key-input">
           <input
             type="password"
-            placeholder="Chave da API OpenAI"
+            placeholder="Chave da API Gemini"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
           />
@@ -333,7 +418,7 @@ Seja específico e prático nas suas recomendações.
                 <h3>Análise Gerada</h3>
                 <span className="analysis-timestamp">{analysis.timestamp}</span>
               </div>
-              
+
               {analysis.error ? (
                 <div className="analysis-error">
                   <p>{analysis.error}</p>
@@ -345,36 +430,44 @@ Seja específico e prático nas suas recomendações.
                     <div className="stats-grid">
                       <div className="stat">
                         <span className="stat-label">Nós:</span>
-                        <span className="stat-value">{analysis.graphStats.totalNodes}</span>
+                        <span className="stat-value">
+                          {analysis.graphStats.totalNodes}
+                        </span>
                       </div>
                       <div className="stat">
                         <span className="stat-label">Conexões:</span>
-                        <span className="stat-value">{analysis.graphStats.totalEdges}</span>
+                        <span className="stat-value">
+                          {analysis.graphStats.totalEdges}
+                        </span>
                       </div>
                       <div className="stat">
                         <span className="stat-label">Complexidade:</span>
-                        <span className="stat-value">{analysis.graphStats.complexity.toFixed(1)}</span>
+                        <span className="stat-value">
+                          {analysis.graphStats.complexity.toFixed(1)}
+                        </span>
                       </div>
                       <div className="stat">
                         <span className="stat-label">Profundidade:</span>
-                        <span className="stat-value">{analysis.graphStats.depth}</span>
+                        <span className="stat-value">
+                          {analysis.graphStats.depth}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="ai-suggestions">
                     <h4>Sugestões da IA</h4>
                     <div className="suggestions-content">
-                      {analysis.suggestions.split('\n').map((line, index) => (
+                      {analysis.suggestions.split("\n").map((line, index) => (
                         <p key={index}>{line}</p>
                       ))}
                     </div>
                   </div>
-                  
+
                   {analysis.usage && (
                     <div className="usage-info">
                       <small>
-                        Tokens utilizados: {analysis.usage.total_tokens} | 
+                        Tokens utilizados: {analysis.usage.total_tokens} |
                         Modelo: {analysis.model}
                       </small>
                     </div>
@@ -383,11 +476,16 @@ Seja específico e prático nas suas recomendações.
               )}
             </div>
           )}
-          
+
           {!analysis && !isAnalyzing && (
             <div className="no-analysis">
-              <p>Clique em "Analisar Grafo" para obter dicas da IA sobre sua regra de negócio.</p>
-              <p><small>Você precisará fornecer uma chave da API OpenAI.</small></p>
+              <p>
+                Clique em "Analisar Grafo" para obter dicas da IA sobre sua
+                regra de negócio.
+              </p>
+              <p>
+                <small>Você precisará fornecer uma chave da API Gemini.</small>
+              </p>
             </div>
           )}
         </div>

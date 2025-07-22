@@ -11,6 +11,7 @@ body {
 .sidebar {
   width: 280px; padding: 1.5rem; border-right: 1px solid #ddd; background: #fff;
   z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  overflow-y: auto; 
 }
 .sidebar h3, .sidebar h4 { margin-top: 0; color: #333; }
 .sidebar h4 { margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; }
@@ -20,8 +21,8 @@ body {
   color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em; font-weight: 500;
 }
 .sidebar button:hover { background: #0056b3; }
-.sidebar-form { display: flex; margin-bottom: 1rem; }
-.sidebar-form input { flex-grow: 1; border: 1px solid #ccc; padding: 8px; border-radius: 4px 0 0 4px; }
+.sidebar-form { display: flex; flex-direction: column; margin-bottom: 1rem; }
+.sidebar-form select, .sidebar-form input { flex-grow: 1; border: 1px solid #ccc; padding: 8px; border-radius: 4px; margin-bottom: 0.5rem; }
 .sidebar-form button { padding: 8px 12px; border-radius: 0 4px 4px 0; margin: 0; background-color: #28a745; }
 .sidebar hr { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
 
@@ -51,7 +52,7 @@ body {
   width: 400px; padding: 1.5rem; background: #282c34; color: white;
   overflow-y: auto; display: flex; flex-direction: column;
 }
-.generate-button { width: 100%; background: #28a745 !important; margin-bottom: 1rem; }
+.generate-button { width: 100%; background: #28a745 !important; margin-bottom: 1rem; border-radius: 4px; padding: 10px; color: white; border: none }
 .json-output-card h3 { border-bottom: 1px solid #555; padding-bottom: 0.5rem; }
 .json-output-card pre {
   white-space: pre-wrap; word-wrap: break-word; font-size: 0.9em;

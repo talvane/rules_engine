@@ -201,7 +201,7 @@ const RuleTester = ({ generatedJson, availableFields }) => {
     <div className="rule-tester">
       <h3>Testar Regra</h3>
       
-      <div className="processing-options">
+      {/* <div className="processing-options">
         <h4>Opções de Processamento:</h4>
         <div className="radio-group">
           <label className="radio-option">
@@ -239,7 +239,7 @@ const RuleTester = ({ generatedJson, availableFields }) => {
             </ol>
           </div>
         )}
-      </div>
+      </div> */}
       
       <div className="input-section">
         <div className="input-header">

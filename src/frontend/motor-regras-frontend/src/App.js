@@ -104,7 +104,7 @@ const FlowBuilder = () => {
         <TrashCan ref={trashCanRef} isOver={isDraggingOverTrash} />
       </div>
       <div className="json-output-container">
-        <button onClick={handleGenerateJson} className="generate-button">Gerar JSON da Regra</button>
+        <button onClick={handleGenerateJson} className="generate-button">Gerar JSON da Regra 🤖</button>
         <JsonOutput generatedJson={generatedJson} />
         <Explanation generatedJson={generatedJson} />
         <AIAnalyzer 
