@@ -20,7 +20,7 @@ import OrNode from './nodes/OrNode';
 import JsonOutput from './JsonOutput';
 import TrashCan from './TrashCan';
 import Explanation from './Explanation';
-import AIAnalyzer from './AIAnalyzer';
+import AIAnalyzer from './AIAnalyzerAntigo';
 import LocalAIAnalyzer from './LocalAIAnalyzer';
 import RuleTester from './RuleTester';
 import './App.css';
