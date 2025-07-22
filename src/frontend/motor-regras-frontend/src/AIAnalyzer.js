@@ -494,4 +494,105 @@ Seja específico e prático nas suas recomendações.
   );
 };
 
+AIAnalyzer.analyzeRule = async (ruleText, apiKey) => {
+  // Validar se a chave da API foi fornecida
+  if (!apiKey) {
+    // Tentar buscar do localStorage como fallback
+    const savedKey = localStorage.getItem("gemini-api-key");
+    if (!savedKey) {
+      throw new Error("Chave da API Gemini não configurada. Configure no analisador de IA primeiro.");
+    }
+    apiKey = savedKey;
+  }
+  
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `Você é um especialista em regras usando a lib https://jsonlogic.com/ as pessoas irão te pedir para construir regras e você sempre devolverá utilizando o seguinte formato: { 
+                        "if": [ 
+                        { 
+                        "<": [ 
+                        { 
+                        "var": "idade" 
+                        }, 
+                        18 
+                        ] 
+                        }, 
+                        "RECUSADO", 
+                        { 
+                        "if": [ 
+                        { 
+                        "var": "possui_divida_ativa" 
+                        }, 
+                        "ANALISE_MANUAL", 
+                        { 
+                        "if": [ 
+                        { 
+                        "and": [ 
+                        { 
+                        ">=": [ 
+                        { 
+                        "var": "pontuacao_credito" 
+                        }, 
+                        500 
+                        ] 
+                        }, 
+                        { 
+                        ">=": [ 
+                        { 
+                        "var": "renda_mensal" 
+                        }, 
+                        1000 
+                        ] 
+                        } 
+                        ] 
+                        }, 
+                        "APROVADO", 
+                        "ANALISE_MANUAL" 
+                        ] 
+                        } 
+                        ] 
+                        } 
+                        ] 
+                        } , caso a pessoa peça alguma coisa que não seja lógica você precisa responder que não consegue montar uma lógica com essa informação.
+
+                        Transforme esta descrição em uma regra JSONLogic: "${ruleText}"`,
+              },
+            ],
+          },
+        ],
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Erro da API: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  
+  // Extrair JSON da resposta
+  const jsonMatch = jsonText.match(/\{.*\}/s);
+  if (!jsonMatch) {
+    throw new Error("Nenhum JSON válido encontrado na resposta");
+  }
+
+  return {
+    json: JSON.parse(jsonMatch[0]),
+    description: ruleText,
+    timestamp: new Date().toISOString(),
+  };
+};
+
 export default AIAnalyzer;

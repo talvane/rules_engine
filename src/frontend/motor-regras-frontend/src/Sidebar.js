@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useFields } from './contexts/FieldsContext'; // Importa o hook para adicionar campos
+import AIAnalyzer from './AIAnalyzer';
 
 function AddFieldForm({ addNode }) {
     const { addNewField } = useFields(); // Pega a função do contexto
@@ -90,10 +91,22 @@ function LoadJsonForm({ onLoad }) {
 function LoadIaRule({ onLoadIa }) {
   const [iaText, setIaText] = useState('');
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (iaText.trim()) {
-      onLoadIa(iaText.trim());
-      setIaText('');
+      try {
+        const result = await AIAnalyzer.analyzeRule(iaText.trim());
+        if (!result || !result.json) {
+          throw new Error("Resposta da IA inválida ou sem JSON.");
+        }
+        
+        // Reutiliza a mesma lógica do handleLoad
+        onLoadIa(result.json);
+        
+        setIaText('');
+      } catch (error) {
+        console.error("Error processing rule with AI:", error);
+        alert(`Erro ao processar regra com IA: ${error.message}`);
+      }
     }
   };
 
@@ -126,7 +139,7 @@ const Sidebar = ({ addNode, onLoadJson, onLoadIa }) => {
       <LoadJsonForm onLoad={onLoadJson} />
 
       <h4>Criar regra com IA</h4>
-      <LoadIaRule onLoadIa={onLoadIa} />
+      <LoadIaRule onLoadIa={onLoadJson} />
 
       <h4>Adicionar Bloco de Lógica</h4>
       <button onClick={() => addNode('if')}>Adicionar Bloco IF</button>
